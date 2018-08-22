@@ -1,0 +1,158 @@
+# Buenas Prácticas NgRx
+<!-- TOC -->
+
+- [Buenas Prácticas NgRx](#buenas-prácticas-ngrx)
+    - [Básico](#básico)
+    - [No añadir modelos al Store](#no-añadir-modelos-al-store)
+    - [Qué se añade en el Store](#qué-se-añade-en-el-store)
+    - [Parametros del Router](#parametros-del-router)
+    - [Evitar listas con grandes datos](#evitar-listas-con-grandes-datos)
+    - [Diseñando el estado](#diseñando-el-estado)
+    - [Todo readonly](#todo-readonly)
+    - [Diseño de Acciones](#diseño-de-acciones)
+        - [Tipos de Acciones](#tipos-de-acciones)
+        - [Clase de creación de acciones](#clase-de-creación-de-acciones)
+        - [Diseño de la carga útil](#diseño-de-la-carga-útil)
+    - [Diseño del Reducer](#diseño-del-reducer)
+        - [Destructuring del PayLoad](#destructuring-del-payload)
+        - [Sin Lógica de Negocio](#sin-lógica-de-negocio)
+        - [Reductores (reduce) para hijos.](#reductores-reduce-para-hijos)
+    - [Testing](#testing)
+    - [Desacoplar redux de la vista](#desacoplar-redux-de-la-vista)
+
+<!-- /TOC -->
+
+## Básico
+
+* Nuestra aplicación sólo puede contar un `Store`, de lo contrario se volvería demasiado compleja.
+* Los `reducers` tienen que ser puros, esto es un principio de la programación funcional que hace que las funciones sean predecibles y evita los efectos secundarios.
+* Las estructuras de datos inmutables son muy importantes para optimizar los ciclos de detección de cambios y evitar comportamientos inesperados, por lo que los reductores deben manejar los datos de forma inmutable.
+* Los `reducers` siempre tienen que devolver un valor. No olvide implementar el caso por defecto de la sentencia switch para devolver el estado original.
+* Todos los datos de la aplicación se deben encontrar en una estructura previamente **definida**
+* El `store` jamás se modifica de forma directa.
+* El valor actual de la información de la app se llama `state`.
+* Toda la información** se encontrará almacenada en un único lugar llamado `store`.
+* Cuando un nuevo estado es creado, se basa en la combinación del viejo estado y a una acción.
+* El `state` es de sólo lectura.
+* Nunca se mutará el state de forma directa (funciones prohibidas de JS: `push`, o la manipulación directa del objeto `oldState`). Se deben de crear nuevos estados.
+
+
+## No añadir modelos al Store
+
+Un modelo puede ser visto como un objeto javascript que tiene funcionalidad. Aunque el paquete Redux original escrito por Dan Abramov prohíbe enviar estos objetos prototipados como `payload`, @ngrx/store no lo prohíbe todavía. Sin embargo, es una mala práctica porque se añade mucha complejidad al `store` y es muy probable que los modelos se rompan debido a la forma inmutable de manejar los datos.
+
+Los reductores, cuando les enviamos objetos de datos se encargan de actualizar de forma inmutable, creando una nueva referencia y perdiendo toda la funcionalidad. Por lo tanto, se recomienda enviar objetos sencillos cuando se trata de enviar `payloads` en las acciones.
+
+Otro enfoque para los modelos es el uso de Interfaces. Las interfaces son excelentes porque sólo se interpretan en tiempo de compilación, no utilizan memoria en tiempo de ejecución. Si su modelo no necesita ser calculado, se aconseja usar Interfaces.
+
+El uso de Interfaces nos permite aprovechar algunas características de TypeScript como Pick<T>. Con Pick<T> podemos crear Tipos a partir de Interfaces, lo cual es muy útil en algunas situaciones, como crear un modelo y un registro con menos propiedades.
+
+Por ejemplo, si nuestro punto final para obtener una lista de usuarios es devolver un objeto parcial en lugar del objeto completo, entonces podemos crear un nuevo Tipo en lugar de dos Clases o Interfaces. Este es un enfoque más limpio y fácil de mantener si sus modelos están preparados para su interfaz de usuario.
+
+## Qué se añade en el Store
+
+No se deberíamos añadir "cosas" en el `store` sólo porque podemos. Tenemos que pensar en qué estado debe de aquí y por qué. El estado que se está compartiendo entre componentes a veces se puede mantener en el componente padre, por ejemplo. A eso lo llamamos estado interior: El componente mantiene su propio estado, el propio componente es responsable de ello. Si ese estado del componente no afecta nada del estado de la aplicación, no necesita estar en el estado de la aplicación o reducir al tacto.
+
+Sin embargo, cuando el estado necesita ser compartido entre diferentes componentes (renderizados dentro de una salida de router) es posible que queramos mantener ese estado en el almacén.
+
+Cuando necesitemos recordar un valor al navegar por la aplicación podríamos ponerlo también en el `store`. Un ejemplo aquí podría ser: Recordar si una barra lateral estaba colapsada o no, así que cuando volvemos a la página con la barra lateral, todavía estaría colapsada.
+
+El estado complejo es algo que podríamos querer poner en el `store` también, ya que **Redux** puede manejar la gestión del estado complejo de una manera elegante. La regla general aquí podría ser sólo: mantener el estado compartido, los valores que queremos recordar y el estado complejo en la `store`. No agreguar el estado en el `store` si no es necesario, esto resultaría innecesario y añadiría complejidad.
+
+Dicho esto, hay dos razones más por las que podríamos añadir un estado extra a el `store`:
+
+* Cuando queremos hacer nuestra aplicación en tiempo real.
+* Cuando queremos hacer actualizaciones optimizadas.
+
+## Parametros del Router
+
+Un error muy común es poner cosas dentro de el `storage` que podrían añadirse fácilmente en la url. El beneficio de mantener el estado en la url es:
+
+* Podemos usar los botones de navegación del navegador
+* Podemos marcar la url como favorita
+* Podemos compartir esa url con otras personas
+
+Si podemos poner cosas simples en la url, al menos deberíamos considerarlo.
+
+
+## Evitar listas con grandes datos
+
+Redux no puede ser visto como una base de datos local en memoria, así que no podemos poner todos nuestros datos en el `storage` por razones de rendimiento. Redux puede ser visto como una abstracción del estado y los datos que nuestra aplicación necesita en un momento dado.
+
+Por ejemplo, si tenemos una lista de 10.000 usuarios, no queremos ponerlos todos en el `storage`. Lo que podríamos hacer es hacer un seguimiento de una lista de 500 usuarios en el `storage`, que el usuario puede ver en ese momento específico, y cargar más usuarios en segundo plano y actualizar esa lista almacenada en búfer.
+
+## Diseñando el estado
+
+Diseñar el estado de nuestra aplicación es un paso importante, y se recomienda dibujar ese estado primero en un papel, pizarra u otro tipo de soporte. La regla más importante aquí es: **Mantener el estado lo más plano posible**
+
+Una de las malas prácticas más comunes es anidar profundamente al estado en algo que se vuelve bastante complejo. Mantenerlo plano hace que la aplicación sea más fácil.
+
+Con esto, no se está tratando de decir que no se puede anidar el estado, se está diciendo que debemos ser muy cuidadosos cuando lo hagamos. La regla general aquí es: **mantener el estado lo más plano posible**. Si se quiere componer el estado en @ngrx/store podremos trabajar con reductores de módulos de feature y cargarlos con lazyLoaded.
+
+## Todo readonly
+
+Ya hemos hablado de la razón por la que tenemos que trabajar de forma inmutable, pero ¿cómo se puede hacer que esto se cumpla? Typescript viene con una palabra clave de sólo lectura que podemos usar para hacer una propiedad de sólo lectura: **readonly**
+
+Esto ciertamente aseguraría que no se está actualizando las propiedades de nuestros reductores por accidente. Es un poco "molesto" que tengamos que escribir sólo lectura para cada propiedad. Lo bueno es que TypeScript nos ofrece algo llamado _"advanced types"_ donde la podemos usar así _Readonly<{}>_. Para más información, se pude solicitar la documentación oficial de TypeScript.
+
+## Diseño de Acciones
+
+### Tipos de Acciones
+
+Un `action` debe ser una cadena que explique lo que la acción debe cambiar en la tienda. No haga que los `action` sean demasiado largos, manténgalos cortos y claros.
+
+Si la gestión del estado llegara a ser muy grande, podríamos prefijar la acción, pero para evitar que llegar a este punto, se recomienda mantenerla simple y pequeña todo el tiempo que podamos.
+
+### Clase de creación de acciones
+
+Cuando usamos tipos de acción simples y cargas útiles se vuelve muy doloroso recordar todos los nombres de tipos de acción y todas las cargas útiles que les pertenecen.
+
+Para facilitar el trabajo, se recomienda crear clases para la creación de acciones para no tener que recordar el `payload` de la acción.
+
+### Diseño de la carga útil
+
+Cuando la acción sólo tendría una propiedad para el `payload`, se podría pensar en utilizarla directamente en lugar de crear una propiedad en ella. Sin embargo, esto llevaría a una inconsistencia, por lo que sería mejor utilizar siempre subpropiedades.
+
+## Diseño del Reducer
+
+### Destructuring del PayLoad
+
+Si queremos hacer el código del `reducer` más legible y más corto podríamos usar el _destructuring_ de javascript para ello. Esto puede ser una preferencia personal, pero hace que nuestros `reducer` sean más fáciles de leer.
+
+Si imagianmos que nuestras acciones tienen 5 o más propiedades en sus cargas útiles, definitivamente aplicar el _destructuring_ ayudaría.
+
+Como apunte, es si la implementación del caso está envuelta dentro de una sentencia en bloque nuestro reductor puede tener las mismas propiedades de `payload` para diferentes acciones.
+
+### Sin Lógica de Negocio
+
+Los reductores no deben contener lógica de negocio bajo ningún concepto, sólo se utilizan para manejar el estado de forma inmutable. No escribiremos lógica de negocios dentro de los reductores. 
+
+Razones: 
+
+* Se volvería muy complejo.
+* La lógica de negocio no tiene nada que ver con la gestión del estado.
+* Para tal fin, se deben de usar los servicios.
+
+### Reductores (reduce) para hijos.
+
+Cuando los reductores necesitan actualizar una parte del estado unos pocos niveles más abajo en el árbol, pueden volverse complejos en un abrir y cerrar de ojos.
+
+Si se pusiera toda la lógica para añadir un asignatario a un contrato específico de un usuario específico, el código sería difícil de leer.
+
+Cuando los reductores se vuelven complejos puede ser una buena idea dividir el reductor en reductores hijos. Extraer el manejo de los contratos en su propio reductor es una buena práctica y que sigue exactamente los mismos principios de un reductor regular.
+
+## Testing
+
+Dado que los reductores son funciones puras, su testing es muy sencillo. No hace falta un mock de ninguna dependencia y sólo tenemos que probar el valor que devuelve el reductor.
+
+También podemos usar `deepfreeze` para congelar el estado cuando el reductor muta datos accidentalmente, por lo que las pruebas arrojarán un error.
+
+## Desacoplar redux de la vista
+
+Tener el store inyectado en todas partes de nuestra aplicación no es una buena idea. Por lo tanto, podríamos considerar los siguientes puntos como mejores prácticas:
+
+* Los componentes no necesitan saber que estamos usando Redux, no inyectar el Store en ellos.
+* Los servicios generalmente no necesitan saber que estamos usando Redux, no inyectar el Store en ellos.
+* Si queremos modificar la parte de Redux de nuestra aplicación, deberíamos de poder hacerlo sin mucho esfuerzo
+
+Por lo tanto, debemos tener algún tipo de capa de abstracción entre la capa de presentación y la capa de gestión de estados.
