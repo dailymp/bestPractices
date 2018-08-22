@@ -1,0 +1,1035 @@
+# Guía de Buenas Prácticas
+
+<!-- TOC -->
+
+- [Guía de Buenas Prácticas](#guía-de-buenas-prácticas)
+    - [Introduccion](#introduccion)
+    - [Unico Fichero](#unico-fichero)
+        - [Responsabilidad única por fichero](#responsabilidad-única-por-fichero)
+        - [Funciones pequeñas](#funciones-pequeñas)
+    - [Nomenclatura](#nomenclatura)
+        - [Pautras generales de nomenclatura](#pautras-generales-de-nomenclatura)
+        - [Separar nombres de archivos por puntos (.) y guiones (-)](#separar-nombres-de-archivos-por-puntos--y-guiones--)
+        - [Símbolos y nombres de archivos](#símbolos-y-nombres-de-archivos)
+        - [Nombres de Servicios](#nombres-de-servicios)
+    - [Bootstrapping](#bootstrapping)
+    - [Selectores](#selectores)
+        - [Componentes](#componentes)
+        - [Personalización de Componentes (Prefijos)](#personalización-de-componentes-prefijos)
+        - [Selectores de Directivas](#selectores-de-directivas)
+        - [Personalización de Directivas (Prefijos)](#personalización-de-directivas-prefijos)
+    - [Nombres de Pipes](#nombres-de-pipes)
+    - [Testing](#testing)
+        - [Herramientas Testing](#herramientas-testing)
+            - [Test Unitarios](#test-unitarios)
+            - [Runners para Testing](#runners-para-testing)
+            - [Test End-2-End](#test-end-2-end)
+        - [Nombres de archivos de Test Unit](#nombres-de-archivos-de-test-unit)
+        - [End-2-End. Nombres](#end-2-end-nombres)
+    - [Nombres Angular Modules](#nombres-angular-modules)
+    - [Convenciones de Codificación](#convenciones-de-codificación)
+        - [Clases](#clases)
+        - [Constantes](#constantes)
+        - [Interfaces](#interfaces)
+        - [Propiedades y Métodos](#propiedades-y-métodos)
+        - [Espacios entre Imports](#espacios-entre-imports)
+    - [Estructura de Aplicación](#estructura-de-aplicación)
+        - [LIFT](#lift)
+        - [Localización (Estructura)](#localización-estructura)
+        - [Identificación](#identificación)
+        - [Estructura Plana](#estructura-plana)
+        - [No se repita (T-DRY)](#no-se-repita-t-dry)
+        - [Orientacion estructura general](#orientacion-estructura-general)
+        - [Estructura de carpetas por features](#estructura-de-carpetas-por-features)
+    - [NgModules](#ngmodules)
+        - [Módulo raíz de la aplicación](#módulo-raíz-de-la-aplicación)
+        - [Módulos por features](#módulos-por-features)
+        - [Módulo de Shared](#módulo-de-shared)
+        - [Módulo Core](#módulo-core)
+        - [Evitar la re-importar el módulo Core](#evitar-la-re-importar-el-módulo-core)
+        - [Módulo de Log](#módulo-de-log)
+        - [Módulo de Seguridad](#módulo-de-seguridad)
+            - [Autenticación](#autenticación)
+            - [Autorización](#autorización)
+            - [Tipos de Flujo](#tipos-de-flujo)
+        - [Módulo de Errores](#módulo-de-errores)
+        - [Módulo Profiling](#módulo-profiling)
+        - [Módulo de Configuración](#módulo-de-configuración)
+        - [Lazy Loaded](#lazy-loaded)
+            - [No importar directamente carpetas Lazy Loaded](#no-importar-directamente-carpetas-lazy-loaded)
+    - [Componentes](#componentes-1)
+        - [Componentes como `tag`](#componentes-como-tag)
+        - [Extraer plantillas y estilos a archivos específicos](#extraer-plantillas-y-estilos-a-archivos-específicos)
+        - [Decoradores Input - Output](#decoradores-input---output)
+        - [Evite Alias en Input - Output](#evite-alias-en-input---output)
+        - [Secuencia de Propiedades](#secuencia-de-propiedades)
+        - [Delegar en Servicios](#delegar-en-servicios)
+        - [No prefijar propiedades de Salida](#no-prefijar-propiedades-de-salida)
+        - [Poner la lógica de presentación en la clase de componente](#poner-la-lógica-de-presentación-en-la-clase-de-componente)
+    - [Directivas](#directivas)
+        - [Uso de Directivas para mejorar/customizar un elemento](#uso-de-directivas-para-mejorarcustomizar-un-elemento)
+        - [Decoradores HostListener/HostBinding vs metadatos Host.](#decoradores-hostlistenerhostbinding-vs-metadatos-host)
+    - [Servicios](#servicios)
+        - [Servicios = Singletons](#servicios--singletons)
+        - [Responsabilidad Única](#responsabilidad-única)
+        - [Prestación de un servicio (NG6)](#prestación-de-un-servicio-ng6)
+        - [Utilice el decorador @Injectable()](#utilice-el-decorador-injectable)
+    - [Servicios Externos de datos](#servicios-externos-de-datos)
+        - [Hable con el servidor a través de un servicio](#hable-con-el-servidor-a-través-de-un-servicio)
+    - [Componentes](#componentes-2)
+    - [Ciclo de vida](#ciclo-de-vida)
+        - [Implementar hooks de ciclo de vida](#implementar-hooks-de-ciclo-de-vida)
+
+<!-- /TOC -->
+
+## Introduccion
+
+Como se explica más adelante en el Módulo de Seguridad, _se recomienda mantenerse al día con las últimas versiones del Framework Angular. El Framework se actualiza, y las actualizaciones pueden corregir defectos de seguridad descubiertos en versiones anteriores. Para más información al respecto, se recomineda comprobar el changeLog de Angular para ver si hay actualizaciones relacionadas con la seguridad_.
+
+Lo mismo ocurre con las librerías de terceros, ya no sólo es bueno estar actualizado por las nuevas características que nos ofrezcan, sino que es recomendable por temas de vulnerabilidades (seguridad) y optimización de las mismas. Para saber si se han corregido defectos de seguridad, nuevamente, se recomienda revisar el ChangeLog de cada librería.
+
+## Unico Fichero
+
+Aplicar el principio de responsabilidad única (SRP) a todos los componentes, servicios y otros símbolos. Esto ayuda a hacer la aplicación más limpia, más fácil de leer y mantener, y más comprobable.
+
+### Responsabilidad única por fichero
+
+Responsabilidad única por fichero.
+No superar las 400 líneas de código.
+
+Razones:
+
+- Un componente por archivo hace que sea mucho más fácil de leer, mantener y evita problemas con los equipos en el manejo de dependencias.
+- Un componente por archivo evita los errores ocultos que frecuentemente surgen cuando se combinan varios componentes en un archivo donde pueden compartir variables, crear cierres no deseados o acoplamientos no deseados con dependencias.
+- Un solo componente puede tener el `default export`, lo que facilita la carga vaga (`lazy loading`) con el enrutador.
+
+El objetivo es que el código sea más reutilizable, más fácil de leer y menos propenso a errores.
+
+### Funciones pequeñas
+
+Definir funciones pequeñas, no más de **75 líneas**.
+
+Razones:
+
+- Las funciones pequeñas son más áciles de probar, especialmente cuando tienen una única responsabilidad y un único propósito
+- Son más fáciles de reutilizar al estar enfocadas a una sola acción/objetivo
+- Al ser pequeñas, son más fáciles de mantener
+- Nos ayudan a evitar errores ocultos que sí pueden tener las funciones grandes, que comparten variables externas, acoplamientos con dependencias, etc
+
+## Nomenclatura
+
+Las convenciones de nomenclatura son de gran importancia para el mantenimiento y la legibilidad. Esta guía recomienda nombrar convenciones para el nombre de fichero y el nombre de símbolo.
+
+### Pautras generales de nomenclatura
+
+Use nombres descriptivos para todos los símbolos.
+
+Siga un patrón que describa la característica del símbolo y luego su tipo. El patrón recomendado es `feature.type.ts`.
+
+Razones:
+
+- Las convenciones de nombres ayudan a proporcionar una forma coherente de encontrar contenido de un vistazo. La consistencia dentro del proyecto es vital. La coherencia con un equipo es importante. La consistencia a través de una compañía proporciona una tremenda eficiencia.
+- Las convenciones de nomenclatura deberían simplemente ayudar a encontrar el código deseado más rápido y hacerlo más fácil de entender.
+- Los nombres de las carpetas y archivos deben expresar claramente su intención. Por ejemplo, `app/heroes/hero-list.component.ts` puede contener un componente que gestione una lista de héroes.
+- Para separar palabras, se recomienda usar _kebab-case_ (`palabra-compuesta`)
+
+### Separar nombres de archivos por puntos (.) y guiones (-)
+
+Use guiones bajos para separar la palabras del nombre descriptivo, y use puntos para separar el nombre descriptivo del tipo. Es mejor utilizar nombres concretos para todos los componentes siguiendo un patrón que describa la característica del componente y luego su tipo. El patrón recomendado es `feature.type.ts.`
+
+Utilice _nombres de tipo_ convencionales incluyendo `.service`, `.component`, `.pipe`, `.module` y `.directive`. Si es necesario, cree _nombres de tipo_ adicionales (como por ejemplo `.model`) si debe, pero tenga cuidado de no crear demasiados.
+
+Razones:
+
+- Los _nombres de tipo_ proporcionan una manera consistente de identificar rápidamente lo que hay en el archivo.
+- Los _nombres de tipo_ facilitan la búsqueda de un tipo de archivo específico utilizando un editor o las técnicas de búsqueda difusa del IDE.
+- Los _nombres de tipo_ no abreviados como `.service` son descriptivos e inequívocos. Abreviaturas como .srv, .svc, y .serv pueden ser confusas, por lo tanto, se desaconsejan.
+- Los _nombres de tipo_ proporcionan patrones de coincidencia para cualquier tarea automatizada.
+
+### Símbolos y nombres de archivos
+
+Use nombres coherentes para todos los activos nombrados después de lo que representan.
+Use _pascal-case_ para los nombres de las clases. (Ejemplo: `AppComponent`)
+Haga coincidir el nombre del símbolo con el nombre del archivo. (Ejemplo: `AppComponent` => `app.component.ts`)
+Añada el nombre del símbolo con el sufijo convencional (como `Component`, `Directive`, `Module`, `Pipe` o `Service`) para una cosa de ese tipo.
+Dé al nombre de archivo el sufijo convencional (como `.component.ts`, `.directive.ts`, `.module.ts`, `.pipe.ts`, `.service.ts` o `.model.ts`) para un archivo de ese tipo.
+
+Razón:
+
+- Las convenciones coherentes facilitan la rápida identificación y referencia de activos de diferentes tipos.
+
+### Nombres de Servicios
+
+Use nombres coherentes para todos los servicios que lleven el nombre de su característica (`feature`).
+Agregue al nombre de la clase el sufijo la palabra _Service_ . Ejemplo: algo que obtiene datos o héroes debería llamarse `DataService`, o `HeroService`.
+
+Algunos términos son inequívocamente servicios. Típicamente se indican agregando la terminación "-er". Es posible que prefiera nombrar un servicio que registre los mensajes como `Logger` en lugar de `LoggerService`. Lo importante de este punto, es una vez tomada la decición sobre esta excepción de nomenclatura, que todo el equipo lo ejecute.
+
+Razones:
+
+- Nos proporciona una manera consistente de identificar y referenciar rápidamente los servicios.
+- Los nombres de servicio claros como Logger no requieren sufijo, a menos de que se consuense lo contrario.
+- Los nombres de servicios tales como Crédito son sustantivos y requieren un sufijo y deben ser nombrados con un sufijo cuando no es obvio si se trata de un servicio u otra cosa.
+
+Ejemplos:
+
+|               Nombre del Símbolo                |  Nombre del Archivo  |     |     |     |
+| :---------------------------------------------: | :------------------: | --- | --- | --- |
+|    @Injectable() export class HeroService {}    | hero-data.service.ts |     |     |     |
+|   @Injectable() export class CreditService {}   |  credit.serivice.ts  |     |     |     |
+|      @Injectable() export class Logger {}       |  logger.service.ts   |     |     |     |
+| @Injectable() export class **LoggerService {}** |  logger.service.ts   |     |     |     |
+
+## Bootstrapping
+
+En un archivo `main.ts`, ponga toda la lógica y el arranque de la aplicación.
+Agregue el manejo de errores en la lógica del arranque
+Evite poner lógica de la App en el main.ts; es recomendable ponerla en un servicio o en un componente.
+
+Razones:
+
+- Siga una convención para la lógica de arranque de una aplicación.
+- Siga una convención familiar de otras tecnológicas.
+
+## Selectores
+
+### Componentes
+
+Se recomienda usar `snake-case` (\_) o `kebab-case` (-) al nombrar los selectores de los componentes.
+
+Ejemplo:
+
+```typescript
+@Component({
+  selector: 'example-input',
+  templateUrl: './example-input.component.html'
+})
+export class ExampleInputComponent {}
+```
+
+### Personalización de Componentes (Prefijos)
+
+Use un valor de selección de elementos en minúsculas y con guión. Ejemplo: `example-login`
+
+Use un prefijo personalizado para un selector de componentes. Por ejemplo: el prefijo `bm` puede ser usado para componentes de _Banca March_: `bm-input`.
+
+Utilice un prefijo que identifique el área de características o la propia aplicación. Ejemplo: el prefijo `app` para la propia aplicación, `bm` para componentes personalizados, y `feature` para características propias (sustituir `feature` por la característica).
+
+Razones:
+
+- Evita colisiones de nombres de elementos con componentes de otras aplicaciones y con elementos HTML nativos.
+- Facilita la promoción y el uso compartido del componente en otras aplicaciones.
+- Los componentes son fáciles de identificar en el DOM.
+
+### Selectores de Directivas
+
+Se recomienda usar `camel-case` para nombrar los selectores de directivas.
+
+- Mantiene los nombres de las propiedades definidas en las directivas que están vinculadas a la vista consistentes con los nombres de los atributos.
+- El analizador HTML de NG es `case-sensitive`.
+
+### Personalización de Directivas (Prefijos)
+
+Se recomienda usar un prefijo personalizado para el selector de las directivas. Ejemplo: el prefijo `bm` puede ser usado para directivas de _Banca March_.
+
+Escribir selectores en `camel-case` a menos que se requiera conincidir con un atributo nativo de HTML.
+
+Ejemplo no recomendado:
+
+```typescript
+@Directive({
+  selector: '[require]'
+})
+export class RequireDirective {}
+```
+
+Ejemplo recomendado:
+
+```typescript
+@Directive({
+  selector: '[bmRequire]'
+})
+export class RequireDirective {}
+```
+
+Razones:
+
+- Evita colisiones de nombres.
+- Las directivas se identifican fácilmente.
+
+## Nombres de Pipes
+
+Use nombres coherentes para los `pipes`, con el nombre de su `feature`.
+
+Ejemplo:
+
+```typescript
+@Pipe({ name: 'ellipsis' })
+export class EllipsisPipe implements PipeTransform {}
+```
+
+pertenece al archivo `elipsis.pipe.ts`
+
+Razón:
+
+- Proporciona una manera consistente de identificar y referenciar rápidamente los `pipes`.
+
+## Testing
+
+Para la realización de testing se recomienda el uso de la metodología de trabajo la metodología BDD (_Behavior Drive Development_), y TDD (_Test Driven Development_).
+
+_BDD_ lo utilizaremos para crear un contexto de negocio/desarrollo, y _TDD_ para testear los componentes que hay dentro de cada aplicación. Combinando las dos metodologías, conseguiremos reducir los bugs en producción, y aumentar exponencialmente nuestra calidad de software.
+
+Es importante recalcar en este punto que es recomendable tener siempre en mente el objetivo con el que se implemenenta el código, ya que una vez fijado el objetivo del desarrollo, podremos realizar los test que definan el comportamineto de los métodos que necesitamos para satisfacerlo.
+
+Para seguir esta metodología, no apoyaremos en los frameworks de testing _JasmineJS y Protractor_ y en el _runner_ de testing _KarmaJS_. Tango el _runner_ como _Protractor_ han sido desarrollados por el equipo de desarrollo de Google, y _JasmineJS_, que es un Framework de Testing de JS, se integran perfectamente entre los tres.
+
+### Herramientas Testing
+
+Basado en el punto anterior, vamos a describir las herraminetas recomendadas para la realización de los _Test_
+
+#### Test Unitarios
+
+Como se ha dicho en el punto anterior, para la realización de _Unit Test_ se recomienda utilizar el Framework de Testing JavaScript _JasmineJS_, sobre el Runner de testing KarmaJS.
+
+#### Runners para Testing
+
+Como se ha dicho en el punto anterior, como lanzador o _runner_ de test, de recomienda utilizar _KarmaJS_
+
+#### Test End-2-End
+
+Como se ha descrito al principio del epígrafe, para la realización de los _test End-2-End_ se recomienda usar la herramienta _Protractor_.
+
+### Nombres de archivos de Test Unit
+
+Cree los los archivos de especificación de pruebas con el mismo de nombre que el componente que prueba.
+
+Cree archivos de especificaciones de pruebas con el sufijo `.spec`.
+
+Ejemplos:
+
+```
+example.component.spec.ts
+
+example-list.component.spec.ts
+
+example.service.spec.ts
+
+example.pipe.spec.ts
+```
+
+Razones:
+
+- Proporciona una manera consistente de identificar rápidamente las pruebas.
+- Proporciona patrón que empareja para Karma u otros runners.
+
+### End-2-End. Nombres
+
+Agregue el sufijo al archivo de pruebas e2e, después de la característica, `.e2e-spec`.
+
+Ejemplo:
+
+`app.e2e-spec.ts`
+
+Razones:
+
+- Proporciona una manera consistente de identificar rápidamente pruebas de e2e.
+
+- Proporciona correspondencia de patrones para los runners de prueba y automatización de construcción.
+
+## Nombres Angular Modules
+
+Agregue el nombre del símbolo al sufijo `Module`.
+Indique el nombre del archivo con la extensión `.module.ts`.
+Ponga un nombre al módulo después de la `feature` y la carpeta en la que reside.
+
+Ejemplo:
+
+example.module.ts
+
+```typescript
+@NgModule({ ... })
+export class ExampleModule { }
+```
+
+app-routing.module.ts
+
+```typescript
+@NgModule({ ... })
+export class AppRoutingModule { }
+```
+
+Razones:
+
+- Proporciona una manera sólida de identificar y referenciar rápidamente los módulos.
+
+- `Pascal-Case` para identificar objetos que pueden ser instanciados usando un constructor.
+
+- Identifica fácilmente el módulo como la raíz de la `feature` con el mismo nombre:
+
+  - Haga sufijo un nombre de clase RoutingModule con `RoutingModule`.
+  - Finalice el nombre del módulo RoutingModule con `-routing.module.ts`.
+
+- Un módulo `RoutingModule` es un módulo dedicado exclusivamente a la configuración del router Angular. Una convención consistente de clase y nombre de archivo hace que estos módulos sean fáciles de detectar y verificar.
+
+## Convenciones de Codificación
+
+Se recomienda tener un conjunto de reglas/convenciones para la codificación/nomenclatura/espacios en blanco.
+
+### Clases
+
+Use _pascal-case_ cuando se nombren clases.
+
+```typescript
+export class ExampleService {
+  constructor() {}
+}
+```
+
+Razones:
+
+- Siga la lógica para los nombres de las clases
+- Las clases pueden ser instanciadas y crear una instancia. Por convención, el _pascal-case_ indica un activo instanciable.
+
+### Constantes
+
+Declarar las variables con `const`, si el valor no cambia durante el ciclo de vida de la aplicación
+
+Razones:
+
+- Transmite al desarrollador que lea el código que el valor no va a cambiar
+- **TypeScript** ayuda a hacer cumplir esta intención, requiriendo una inicialización inmediata y evitando reasignaciones posteriores.
+
+Considere codificar las variables `const` en _camel-case_
+
+Razones:
+
+- Los nombres de variables en _camel-case_ (exampleRoutes) son más fáciles de leer y entender que los nombres tradicionales UPPER_SNAKE_CASE (EXAMPLE_ROUTES).
+- La tradición de nombrar constantes en UPPER_SNAKE_CASE refleja una época anterior a los IDEs modernos que rápidamente revelan la declaración de `const`. **TypeScript** evita reasignaciones accidentales.
+
+Tolerar/no cambiar las variables `const` existentes que se deletrean en UPPER_SNAKE_CASE.
+
+Razones:
+
+- La tradición de UPPER_SNAKE_CASE sigue siendo popular y omnipresente, especialmente en módulos de terceros. Rara vez vale la pena cambiarlos a riesgo de romper el código y la documentación existente.
+
+```typescript
+export const mockSaiyans = ['Goku', 'Vegeta']; // prefer
+export const saiyansUrl = 'api/saiyans'; // prefer
+export const ENEMYS_URL = 'api/enemys'; // tolerate
+```
+
+### Interfaces
+
+Nombre las interfaces usando _camel-case_.
+
+Considere nombrar una interfaz sin un prefijo I (Ejemplo: `IExample` a `Example`).
+
+Considere la posibilidad de utilizar una `class` en lugar de una `interface` para servicios y declarables (`components`, `directives` y `pipes`).
+
+Considere el uso de una `interface` para modelos de datos.
+
+Razones:
+
+- Las directrices de **TypeScript** desalientan el prefijo _I_.
+- Una clase sola es menos código que una **interface de clase** más su **interface**.
+- Una clase puede actuar como `interface` (usar implementos en lugar de extensiones).
+- Una clase de interfaz puede ser un token de búsqueda de servicios en la inyección de dependencia angular.
+
+### Propiedades y Métodos
+
+Use _camel-case_ para nombrar propiedades y métodos.
+
+Evite marcar propiedades y métodos privados con guión bajo (\_). Use el método **private**
+
+```typescript
+  private log() {
+    console.log(this.message);
+  }
+```
+
+en vez de usar
+
+```typescript
+  _log() {
+    console.log(this.message);
+  }
+```
+
+Razones:
+
+- Sigue la lógica convencional en cuanto a propiedades y métodos.
+- JavaScript carece de una verdadera propiedad o método privado.
+- Las herramientas TypeScript facilitan la identificación de propiedades y métodos privados y públicos. En vez de usar el _underscore_ (\_), use el método **private** que nos proporciona **TypeScript**.
+
+### Espacios entre Imports
+
+Se recomienda dejar una línea vacía entre las importaciones de terceros y las importaciones de aplicaciones.
+
+Considere listar las líneas de importación ordenadas alfabéticamente por el módulo.
+
+Considere listar los símbolos importados desestructurados en orden alfabético.
+
+Considere listar las importaciones por bloques (Módulos/Clases Ng, Módulos terceros, Servicios, Pipes,...)
+
+Razones:
+
+- La línea vacía separa los imports de NG de los suyos.
+- El orden alfabético facilita la lectura y localización de los símbolos.
+- Al estar por bloques, es más fácil la localización del símbolo.
+
+## Estructura de Aplicación
+
+Es recomendable tener una visión a corto plazo de la implementación y una visión a largo plazo. Empiece de a poco, pero tenga en cuenta hacia dónde se dirige la aplicación. No ser conscientes de a dónde se dirige puede traducirse más adelante en bastante tiempo para reconducir la aplicación.
+
+Todo el código de la aplicación está en una carpeta llamada `src`. Todas las `features` están en su propia carpeta, con su propio **NgModule**.
+
+Todo el contenido está en un activo por archivo. Cada `component`, `service` y `pipe` está en su propio archivo. Todos los scripts de terceros se almacenan en otra carpeta y no en la carpeta src. Utilice las convenciones para fijar los nombres de los archivos que se recomientan en esta guía.
+
+### LIFT
+
+Se basa en cuatro principios (las siglas en inglés):
+
+- Estructurar la aplicación de tal manera que pueda localizar el código rápidamente
+- Identificar el código de un vistazo
+- Mantener la estructura más plana que pueda
+- Tratar de no repetirse a sí mismo.
+
+_[**L**ocating our code is easy, **I**dentify code at a glance, **F**lat structure as long as we can, **T**ry to stay DRY (Don't Repeat Yourself) or T-DRY]_
+
+Cuando en esta guía se haga referencia a _LIFT_, se refiere a estos puntos de arriba descritos.
+
+### Localización (Estructura)
+
+Haga que la localización del código sea intuitivo, simple y rápido.
+
+Razones:
+
+- Para trabajar eficientemente debe ser capaz de encontrar archivos rápidamente, especialmente cuando no sabe (o no recuerda) los nombres de los archivos. 
+- Mantener los archivos relacionados cerca uno del otro en una ubicación intuitiva ahorra tiempo. 
+- Una estructura descriptiva de carpetas hace una gran diferencia para usted y las personas que vienen después de usted.
+
+### Identificación
+
+Ponga un nombre al archivo de tal manera que sepa instantáneamente lo que contiene y representa.
+
+Sea descriptivo con los nombres de los archivos y mantenga un único componente en el archivo.
+
+Evite archivos con múltiples componentes, múltiples servicios o una mezcla.
+
+Razón:
+
+- Se dedica menos tiempo a buscar y a abrir cada archivo, de esta manera, se es más eficiente. Los nombres de archivo más largos son mucho mejores que los nombres abreviados e ilegibles.
+
+### Estructura Plana
+
+Mantenga una estructura de carpetas lo más plana y mayor tiempo posible.
+
+Considere la posibilidad de crear subcarpetas cuando una carpeta alcanza siete o más archivos.
+
+Considere la posibilidad de configurar el IDE para que oculte los archivos distractores e irrelevantes, como los archivos.js y.js.map generados.
+
+Razones:
+
+- Nadie quiere buscar un archivo en siete niveles de carpetas. Una estructura plana es fácil de mantener y buscar en ella.
+
+Por otro lado, los psicólogos creen que los humanos comienzan a luchar cuando el número de cosas interesantes adyacentes excede nueve. Así que cuando una carpeta tiene diez o más archivos, puede ser el momento de crear subcarpetas.
+
+Base su decisión en su nivel de comodidad. Utilice una estructura lo más plana posible hasta que haya un valor obvio para crear una carpeta nueva.
+
+### No se repita (T-DRY)
+
+No se repita. Evite ser tan _"Don't Repear Yourself"_ que acabe sacrificando la legibilidad.
+
+Razones:
+
+- No repetirse es importante, pero no crucial si sacrifica los otros elementos de _LIFT_. Por eso se llama T-DRY. Por ejemplo, es redundante nombrar una plantilla hero-view.component.html porque con la extensión.html, obviamente es una vista. Pero si algo no es obvio o se aparta de una convención, entonces deletérelo.
+
+### Orientacion estructura general
+
+- Empiece con algo pequeño, pero tenga en cuenta hacia dónde se dirige la aplicación (este punto es muy importante).
+
+- Se recomienda tener una visión a corto plazo de la implementación y una visión a largo plazo.
+
+- Todo el código de la aplicación debe de estar en una carpeta llamada src.
+
+- Considere la posibilidad de crear una carpeta para un componente cuando tenga varios archivos adjuntos (.ts,.html,.css y.spec).
+
+- Ayude a mantener la estructura de la aplicación pequeña en las primeras etapas, mientras que a medida que la aplicación crece, será más fácil evolucionar.
+
+- Cada componentes suele tener cuatro archivos (por ejemplo, _.html, _.css, _.ts y _.spec.ts).
+
+Mientras que los componentes en carpetas dedicadas son ampliamente preferidos, otra opción para aplicaciones pequeñas es mantener los componentes planos (no en una carpeta dedicada). Esto agrega hasta cuatro archivos a la carpeta existente, pero también reduce el anidamiento de carpetas. Sea lo que sea cual sea el tipo de proyecto que esté realizando, sea consciente de esta opción.
+
+### Estructura de carpetas por features
+
+Se recomienda crear carpetas con el nombre de la característica que representan.
+
+Razones:
+
+- Un desarrollador puede localizar el código e identificar lo que representa cada archivo de un vistazo. La estructura es tan plana como puede ser y no hay nombres repetitivos o redundantes.
+- Todas las pautas de _LIFT_ están cubiertas.
+- Ayuda a reducir el desorden de la aplicación organizando el contenido y manteniéndolo alineado con las directrices de _LIFT_.
+- Cuando hay muchos archivos, por ejemplo más de 10 archivos, localizarlos es más fácil con una estructura de carpetas consistente/más amplia y más difícil en una estructura plana.
+
+Se recomienda crear un `NgModule` para cada área de característica.
+
+- NgModules facilitan las funciones de enrutamiento de cargas perezosas.
+
+- Los NgModules facilitan el aislamiento, las pruebas y la reutilización de las funciones.
+
+## NgModules
+
+### Módulo raíz de la aplicación
+
+Crea un `NgModule` en la carpeta raíz de la aplicación, por ejemplo, en `/src/app`.
+
+- Cada aplicación requiere al menos un `NgModule` raíz.
+
+Considere nombrar el módulo raíz `app.module.ts`.
+
+- Facilita la localización e identificación del módulo raíz.
+
+### Módulos por features
+
+Se recomienda crear un `NgModule` para todas las funciones distintas de una aplicación.
+
+Coloque el módulo de features en la misma carpeta con nombre que el área de features; por ejemplo, en `app/features`.
+
+Asigne un nombre al archivo de módulo de característica que refleje el nombre del área y la carpeta de la feature; por ejemplo, `app/heroes/example.module.ts`.
+
+Ponga un nombre al símbolo del módulo de feature que refleje el nombre del área de feature, carpeta y archivo; por ejemplo, `app/feature/feature.module.ts` define `FeatureModule`.
+
+Razones:
+
+- Un módulo de feature puede exponer u ocultar su implementación de otros módulos.
+
+- Un módulo de feature identifica los distintos conjuntos de componentes relacionados que componen el área de feature.
+
+- Un módulo de feature se puede enrutar fácilmente tanto con enrutado "normal" como con lazyloading.
+
+- Un módulo de feature define límites claros entre la funcionalidad específica y otras feature de la aplicación.
+
+- Un módulo de feature ayuda a clarificar y facilitar la asignación de responsabilidades de desarrollo a diferentes equipos.
+
+- Un módulo de feature se puede aislar fácilmente para realizar pruebas.
+
+### Módulo de Shared
+
+Cree un módulo de features llamado `SharedModule` en una carpeta compartida; por ejemplo, `app/shared/shared.module.ts` define `SharedModule`.
+
+Declare componentes, directivas y pipes en un módulo compartido cuando esos elementos sean reutilizados y referenciados por los componentes declarados en otros módulos de features.
+
+Considere la posibilidad de utilizar el nombre `SharedModule` cuando se haga referencia al contenido de un módulo compartido en toda la aplicación.
+
+Considere la posibilidad de no proporcionar servicios en módulos compartidos. Los servicios suelen ser individuales que se proporcionan una sola vez para toda la aplicación o en un módulo en particular. Sin embargo, hay excepciones, siempre y cuando los consumidores del servicio no se ven afectados por nuevas instancias.
+
+Importe todos los módulos requeridos por los activos en el `SharedModule`; por ejemplo, CommonModule y FormsModule.
+
+Razones:
+
+- `SharedModule` contendrá componentes, directivas y pipes que pueden necesitar de otro módulo común; por ejemplo, ngFor en CommonModule.
+
+Declarar todos los componentes, directivas y pipes en el `SharedModule`.
+
+Exporte todos los símbolos del `SharedModule` que otros módulos de funciones necesitan usar.
+
+- `SharedModule` existe para poner a disposición componentes, directivas y pipes de uso común para su uso en las plantillas de componentes de muchos otros módulos.
+
+Evite especificar proveedores singleton para toda la aplicación en un `SharedModule`.
+
+- Un módulo con lazyLoading que importa ese módulo compartido hará su propia copia del servicio y probablemente tendrá resultados no deseados.
+
+- No desea que cada módulo tenga su propia instancia separada de servicios singleton. Sin embargo, existe un peligro real de que esto ocurra si el `SharedModule` proporciona un servicio.
+
+### Módulo Core
+
+Considere la posibilidad de recopilar numerosas clases auxiliares de un solo uso dentro de un módulo principal para simplificar la estructura aparente de un módulo de características.
+
+Considere llamar al módulo central de la aplicación, `CoreModule`. La importación de `CoreModule` en el AppModule raíz reduce su complejidad y enfatiza su papel como orquestador de la aplicación en su conjunto.
+
+Cree un módulo de características llamado CoreModule en una carpeta principal (por ejemplo, `app/core/core.module.ts` define `CoreModule`).
+
+Ponga un servicio singleton cuya instancia será compartida a lo largo de la aplicación en el `CoreModule` (por ejemplo, `ExceptionService` y `LoggerService`).
+
+Importe todos los módulos requeridos por los activos en el `CoreModule` (por ejemplo, `CommonModule` y `FormsModule`).
+
+- `CoreModule` proporciona uno o más servicios singleton. Angular registra a los servicios con el inyector de raíz de la aplicación (`@Injectable()`), haciendo que una sola instancia de cada servicio esté disponible para cualquier componente que la necesite, ya sea que ese componente esté cargado desde el principio o por medio del lazyLoad.
+
+- `CoreModule` contendrá servicios singleton. Cuando los importa un módulo es cargado mediante lazyLoad, obtendrá una nueva instancia y no el singleton previsto para toda la aplicación.
+
+Reúna componentes de uso único para toda la aplicación en el `CoreModule`. Impórtelos una vez (en el AppModule) cuando se inicie la aplicación y nunca los importe en ningún otro sitio. (por ejemplo, `NavComponent` y `SpinnerComponent`).
+
+- Las aplicaciones del mundo real pueden tener varios componentes de un solo uso (por ejemplo, spinners y diálogos modales) que sólo aparecen en la plantilla de `AppComponent`. No se importan en ningún otro lugar, por lo que no se comparten en ese sentido. Sin embargo, son demasiado grandes y desordenados para dejarlos sueltos en la carpeta raíz.
+
+Evite importar el `CoreModule` en cualquier lugar excepto en el `AppModule`.
+
+Razones:
+
+- Un módulo cargado perezosamente que importa directamente el `CoreModule` hará su propia copia de los servicios y probablemente tendrá resultados indeseables.
+
+- Un módulo muy cargado ya tiene acceso al inyector del `AppModule`, y por lo tanto a los servicios del `CoreModule`.
+
+Exporte todos los símbolos del `CoreModule` que el `AppModule` importará y pondrá a disposición de otros módulos para su uso.
+
+Razones:
+
+- `CoreModule` existe para que los servicios singleton de uso común estén disponibles para su uso en muchos otros módulos.
+
+- Quieres que toda la aplicación utilice la única instancia de singleton. No desea que cada módulo tenga su propia instancia separada de servicios singleton. Sin embargo, existe un peligro real de que esto ocurra accidentalmente si el `CoreModule` proporciona un servicio.
+
+### Evitar la re-importar el módulo Core
+
+Sólo se debe de importar, en caso de haber, el CoreModule.
+
+Para evitarlo, se debe de añadir un script que hace que les proteja de múltiples injecciones.
+
+Razones:
+
+- Les protege contra la re-importación
+- Les protege contra la creación de múltiples instancias que debieran ser singletons
+
+### Módulo de Log
+
+El _log_ de aplicaciones es una de las partes más importantes de un desarrollo de calidad, ya que es el encargado de trazar todo lo que ha ido pasando en nuestro sistema a lo largo del tiempo. Se recomienda utilizar un módulo que gestione y facilite toda la parte relacionada con el log de aplicación.
+
+Este módulo se recomienda que exponga un serie de servicios que sean encargados de crear los logs que a nivel del desarrollador se crea necesarios, pudiendo enviarlos tanto a la consola del navegador como a un servicio externo de log mediante una petición HTTP. El módulo debe de ser configurable para poder seleccionar que tipo de nivel de log que se usará y para poder seleccionar la URL del servicio externo donde se va a enviar el log.
+
+### Módulo de Seguridad
+
+Se recomiendta usar un módulo que provea de una capa de seguridad para la preveción de scripts cruzados (Preventing cross-site scripting (XSS)), verificar valores (Trusting safe values), inclusión de scripts entre sitios (XSSI), (Cross-site script inclusion (XSSI)) y prevención vulneravilidades de nivel HTTP (HTTP-level vulnerabilities).
+
+Además, se recomienda mantenerse al día con las últimas versiones del Framework Angular. El Framework se actualiza, y las actualizaciones pueden corregir defectos de seguridad descubiertos en versiones anteriores. Para más información al respecto, se recomineda comprobar el _changeLog_ de Angular para ver si hay actualizaciones relacionadas con la seguridad.
+
+Otra recomendación es no modificar el Core de Angular. Esstas modificaciones crean versiones privadas o personalizadas paralelas de Angular, tienden a quedarse rezagadas con respecto a la versión actual y muy posiblementes pueden no incluir importantes correcciones y mejoras de seguridad.
+
+Evite mostrar contenido directamente cargado sin anter pasarle la _"sanitizacion"_ que provee el Framework Angular.
+
+#### Autenticación
+
+En el contexto de LogIn de usurios, en concreto para la Gestión de Identidades, se recomienda usar un estandar de identificación digital descentralizado (OpenID), con lo que el usuario se puede identificar en una página web, y puede ser verificado por cualquier servidor que soporte el protocolo.
+
+Para ello, existen librerías de terceros para NG que tienen las siguientes ventajas: 
+
+- Tienen buena integración con NG.
+- Código Abierto (Licencia MIT).
+- Soporte para OAuth2 y OpenID Connect.
+- Fácilmente configurables.
+- Soporta `OpenID Implicit Flow`.
+- Validación completa del lado del cliente.
+- Gestión de sesiones OpenID Connect 1.0
+
+
+#### Autorización
+
+El FW de NG nos provee de guardas (`guards`), que nos sirven para proteger determinadas rutas solicitadas. Realmente son interfaces que dan o no accesto a determinadas rutas de navegación. Esto nos sirve para poder bloquear a un usuario que por ejemplo no esta autorizado por su perfil a acceder a una determinada vista. Esta característica nos facilita la implementación, por ejemplo, de servicios basados en JWT, y poder decidir si el usuario puede o no acceder, dando por hecho que el rol del usuario venga en el JWT.
+
+
+Se recomienda el uso del patrón de OAuth2 (también conocido como _OAuth_).
+Tenemos varios tipos de implementacions de OAuth. En ellos, los actores principales son los siguientes: 
+
+- Propietario del recurso : posee los datos en el servidor de recursos.
+- Servidor de recursos : la API que almacena los datos a los que la aplicación desea acceder.
+- Cliente : la aplicación que quiere acceder a sus datos.
+- Servidor de autorización : el motor principal de OAuth.
+
+Aunque la especificación _OAuth no define qué es un token_, usaremos el standart **JWT** para comunicarnos. Los _tokens de acceso_ son el token que el cliente usa para acceder al Servidor de recursos (API) y están destinados a ser de corta duración. Otro tipo de token es el _token de actualización_. Este es más longevo que el de acceso, y este se puede usar para obtener nuevos tokens. Para obtener un token de actualización, las aplicaciones generalmente requieren clientes confidenciales con autenticación.
+
+De forma genérica, podemos ver el consumo de Tokens en esta imagen (canal de retorno)
+
+
+![alt Ejemplo Consumo Tokens][oauth-flow]
+
+
+Específicamente, este podría ser un ejemplo en Front:
+
+- El propietario del recurso inicia el flujo para delegar el acceso al recurso protegido
+- El cliente envía la solicitud de autorización con los alcances deseados a través del navegador, redirigiendo al punto final de autorización en el servidor de autorización.
+- El Servidor de Autorización devuelve un cuadro de diálogo de consentimiento que dice "¿Permite que esta aplicación tenga acceso a estos ámbitos?". Por supuesto, necesitará autenticarse en la aplicación, por lo que si no está autenticado en su servidor de recursos, se lo preguntará usted para iniciar sesión. Si ya tiene una cookie de sesión en caché, verá el cuadro de diálogo de consentimiento, y estar de acuerdo.
+- La concesión de autorización se transfiere a la aplicación a través del redireccionamiento del navegador. Todo esto sucede en el canal frontal.
+
+![alt Ejemplo Consumo Tokens][oauth-flow-front]
+
+
+#### Tipos de Flujo
+
+Existen varios flujos dentro de OAuth:
+
+- `Implicit Flow` (flujo implícito): No hay ningún servidor backend que chekee la autorización concedida para un token de acceso. Un SPA es un buen ejemplo del caso de uso de este flujo. Este flujo también se denomina OAuth de _2 patas_.
+
+- `Authorization Code Flow`, conocido como el flujo de _3 patas_, es el patrón más utlizado y el recomendado. Está descrito más arriba.
+
+- `Client Credential Flow`, usado también para escenarios _servidor-servidor_. Lo que necesita son las credenciales del cliente(o servidor) para hacer todo el flujo.
+
+-`Resource Owner Password Flow`. Es muy similar a la autenticación directa con nombre de usuario y contraseña y no se recomienda.
+
+- `Assertion Flow`, que es similar a `Client Credential Flow`. Este flujo permite a un servidor de autorización confiar en las concesiones de autorización de terceros como SAML.
+
+
+### Módulo de Errores
+
+El manejo de errores es una pieza importante, tanto para el desarrollador como para el usuario, a la hora de manejar los errores que se produzcan en la aplicación. Esto, es una de las partes más importantes de un desarrollo de calidad, por lo que se recomienda utilizar un módulo que gestione y facilite toda la parte relacionada con el tratamiento de errores de aplicación. 
+
+Este módulo debe de exponer una serie de servicios que serán encargados de manejar los errores de los sistemas externos, teniendo como opción enviarlos tanto a la consola del navegador como a un servicio externo de manejo de errores mediante una petición HTTP.
+
+El módulo debe de ser configurable y se podrá seleccionar la URL del servicio externo a donde se quiere enviar el error.
+
+Este módulo, principalmente, debe tener la misión de centralizar los mensajes de error, dando una salida más refinada de los errores para el desarrollador. Debe de tener en cuenta el idioma en el que se esté ejecutando la aplicación para traducirlos, debe de ser configurable en la salida de errores (consola del navegador o envío a una URL para su tratamiento), y el desarrollador debe de poder implementar distintos servicios que necesite, por ejemplo, alertas, notificaciones,... dado que proporcionará una salida para el uso de estos errores.
+
+### Módulo Profiling
+
+ Se recomienda monitorizar la aplicación, para dar la posibilidad de debuggear posibles fugas de memoria, tiempos de ejecución o traceado de funciones; la principal ventaja de este servicio es la posibilidad de tener un control de trazado de funciones y monitorizar el tiempo de ejecucion de funciones o fragmentos de la aplicación para su posterior análisis.
+
+### Módulo de Configuración
+
+Se recomienda disponer de distintos ficheros de entorno diferenciados. En primera instancia se crean ficheros de entorno para desarrollo y producción, pero podrán crearse tantos como se desee. A la hora de paquetizar la aplicación se seleccionará, mediante paso de parámetros, el entorno seleccionado, siendo inyectadas las properties adecuadas en tiempo de transpilación, no siendo posible el cambio de properties en caliente. Si se requiere de cambio de alguna de las properties incluidas en los ficheros de entorno tendremos que realizar un nuevo paquetizado, así como una subida al entorno seleccionado.
+
+También hay otra opción que es mediante un servicio externo; en esta opción se ptaría por el uso de un servicio externo de configuración, el cual nos proveerá de los ficheros de properties adecuados, pudiendo seleccionar el entorno del que traernos dichas properties mediante el envío de un parámetro.
+
+### Lazy Loaded
+
+Una característica distinta de la aplicación puede ser la necesidad de cargar módulos bajo demananda (llamada _carga vaga_ o _lazy loaded_), en lugar de cargar todos los módulos al inicio de la aplicación. Puede darse la necesidad de, que una aplicación, pueda tomar dos caminos disitintos, y no haga falta cargar los módulos del camino contrario. Con esto lo que conseguimos es que el arranque de la aplicación sea más rápido.
+
+Se recomienda, que para esta práctica, se ponga el contenido de en una carpeta _lazy loaded_. Lo normal que contenga esta carpeta es un router, componentes hijos, sus assets y los módulos relacionados.
+
+#### No importar directamente carpetas Lazy Loaded
+
+Evite esta práctica. No es recomendable que módulos hermanos y padres importen directamente un módulo en una función _lazy loaded_
+
+Razones:
+
+- La importación directa y el uso de un módulo lo cargarán inmediatamente, cuando la intención es cargarlo bajo demanda, por lo que se pierde todos los beneficios de hacerlo de esta manera.
+
+## Componentes
+
+### Componentes como `tag`
+
+Se recomienda que se usen los componentes como un selector de elemento (`tag`), en vez de como selector de atributo o clase.
+
+Razones:
+
+- Los componentes tienen plantillas que contienen HTML y sintaxis opcional de `template's` de `Angular`.
+- Los desarrolladores colocan los componentes en la página como si fueran elementos nativos de HTML (`tags`) y componentes web.
+- Los componentes muestran contenido.
+
+### Extraer plantillas y estilos a archivos específicos
+
+Se recomienda extraer las plantillas HTML y los estilos CSS en un archivo separado, siempre y cuando, los archivos tengan más de 3 líneas (por mantenebilidad).
+
+Se recomienda espedicicar las URL's relativas a compoenntes, prefijadas con **./**. Se puede ver en los ejemplos.
+
+Asigne un nombre al archivo de la plantilla **nombre-del-componente**]component.htm, de manera que quede:
+
+```javascript
+@Component({
+  [...],
+  templateUrl: './example.component.html',
+  [...],
+})
+```
+
+Asigne un nombre al archivo de la hoja de estilo **nombre-del-componente**]component.css, de manera que quede:
+
+```javascript
+@Component({
+  [...],
+  styleUrls: ['./example.component.css'],
+  [...],
+})
+```
+
+Razones:
+
+- Las plantillas HTML y las hojas de estilos en línea de gran tamaño ocultan el propósito del compoennte, y la implementación del componente, lo que _reduce la legibilidad y la capacidad de mantenimiento_.
+
+- En la mayoría de los IDE's, las ayudas a la sintaxis y los atajos de código, no están disponibles cuando se desarrollan plantillas y estilos en línea. Por parte del equipo de desarrollo de NG, se está trabajando en esta feature para solventar este problema en aquellos editores que lo soporten; en cambio, no lo harán para los estilos CSS.
+
+- Una URL relativa a un componente no requiere ningún cambio al mover los archivos de componentes, siempre y cuando los archivos permanezcan juntos.
+
+- El prefijo **./** es una sintaxis estándar para URL's relativas; no depende de la capacidad actual de Angular de prescindir de ese prefijo.
+
+### Decoradores Input - Output
+
+Se recomienda utilizar los decoradores de clases `@Input()` y `@Output()` en lugar de las propiedades de entradas y salidas de los metadatos `@Directive` y `@Component`:
+
+Considere colocar `@Input()` o `@Output()` en la misma línea que la propiedad que decora para mejorar la legibilidad.
+
+Razones:
+
+- Es más fácil y legible identificar qué propiedades de una clase son de entrada o salida.
+
+- Si alguna vez necesita renombrar la propiedad o el nombre del evento asociado con `@Input` o `@Output`, puede modificarlo en un solo lugar.
+
+- La declaración de metadatos adjunta a la Directiva es más corto y, por tanto, más legible.
+
+- Colocando el decorador en la misma línea, por lo general, hace que el código sea más corto y aún así identifica fácilmente la propiedad como una entrada o salida. Ponerlo en la línea de arriba al hacerlo es claramente más legible.
+
+### Evite Alias en Input - Output
+
+Evite los alias de entrada y salida, excepto cuando sirva para un propósito importante.
+
+Razones:
+
+- Dos nombres para la misma propiedad (uno privado, otro público) son intrínsecamente confusos.
+
+- Debería utilizar un alias cuando el nombre de la directiva es también una propiedad de entrada, y el nombre de la directiva no describe la propiedad.
+
+### Secuencia de Propiedades
+
+- Coloque las propiedades arriba, seguido de los métodos.
+
+- Coloque a los miembros privados después de los miembros públicos, en orden alfabético.
+
+Razones:
+
+- Colocar los miembros en una secuencia consistente hace que sea fácil de leer y ayuda a identificar instantáneamente qué miembros del componente sirven para qué propósito.
+
+### Delegar en Servicios
+
+Se recomienda limitar la lógica en un componente sólo a la necesaria para la vista. El resto de la lógica debe delegarse a los servicios.
+
+Se recomienda mover la lógica reutilizable a los servicios y mantenga los componentes simples y enfocados en su propósito previsto.
+
+Razones:
+
+- La lógica puede ser reutilizada por múltiples componentes cuando se coloca dentro de un servicio y se expone a través de una función.
+
+- La lógica en un servicio puede aislarse más fácilmente en una prueba unitaria, mientras que la lógica de llamada en el componente puede ser fácilmente burlada.
+
+- Elimina dependencias y oculta detalles de implementación del componente.
+
+- Mantiene el componente sin excesivas línead de código, pequeño y enfocado a su cometido.
+
+### No prefijar propiedades de Salida
+
+Use nombres de eventos sin el prefijo _on_ (ejmplo: _onSaveFile_ => _saveFile_).
+
+Se recomienda asignar un nombre a los métodos de manejo de eventos con el prefijo activado seguido del nombre del evento. (ejmplo: _(saveFile)="onSaveFile($event)"_).
+
+Razones:
+
+- Esto es coherente con los eventos incorporados, como los clicks en los botones.
+
+- Angular permite una sintaxis alternativa on-\*. Si el propio evento tuviera el prefijo on esto resultaría en una expresión vinculante **on-onEvent**.
+
+### Poner la lógica de presentación en la clase de componente
+
+Se recomineda poner la lógica de presentación en la clase de componente y no en el modelo.
+
+Razones:
+
+- La lógica estará contenida en un lugar (la clase del componente) en lugar de estar distribuida en dos lugares.
+
+- Mantener la lógica de presentación del componente en la clase en lugar de la plantilla HTML mejora la capacidad de prueba, mantenimiento y reutilización.
+
+## Directivas
+
+### Uso de Directivas para mejorar/customizar un elemento
+
+Utilice directivas de atributo cuando tenga lógica de presentación sin una plantilla.
+
+Razón:
+
+- Las directivas de atributos no tienen una plantilla asociada.
+
+- Un elemento puede tener más de una directiva de atributo aplicada.
+
+### Decoradores HostListener/HostBinding vs metadatos Host.
+
+Considere preferir @HostListener y @HostBinding a la propiedad host de los decoradores @Directive y @Component. Sea consistente en su elección.
+
+Razones:
+
+- La propiedad asociada a @HostBinding o el método asociado a @HostListener sólo puede modificarse en un único lugar, en la clase de la directiva.
+- Si utiliza la propiedad de metadatos del host, debe modificar tanto la declaración de propiedad/método en la clase de la directiva como los metadatos en el decorador asociados a la directiva.
+
+Compare con la alternativa de metadatos de host.
+
+Razones:
+
+- Los metadatos del host son sólo un término para recordar y no requieren importaciones adicionales de EcmaSript.
+
+## Servicios
+
+### Servicios = Singletons
+
+Utilice los servicios como singletes dentro del mismo inyector. Utilícelos para compartir datos y funciones.
+
+Razones:
+
+- Los servicios son ideales para compartir métodos a través de un área de características o una aplicación.
+
+- Los servicios son ideales para compartir datos de estado en memoria.
+
+### Responsabilidad Única
+
+Cree servicios con una única responsabilidad que esté encapsulada en su contexto.
+
+Cree un nuevo servicio una vez que el servicio comience a exceder ese propósito singular (**única responsabilidad**).
+
+Razones:
+
+- Cuando un servicio tiene múltiples responsabilidades, se vuelve difícil de probar.
+
+- Cuando un servicio tiene múltiples responsabilidades, cada componente o servicio que lo inyecta tiene el peso de todas ellas.
+
+### Prestación de un servicio (NG6)
+
+Proporcione un servicio directamente a la raíz de la aplicación (`provideIn`), con el decorador de inyección @Injectable del servicio.
+
+Razones:
+
+- El inyector de Angular es jerárquico.
+
+- Cuando se proporciona el servicio a la raíz de la aplicación(`provideIn`), esa instancia del servicio se comparte y está disponible en cada clase que necesite el servicio. Esto es ideal cuando un servicio comparte métodos o estados.
+
+- Al registrar un servicio en el decorador de @Injectable del servicio, las herramientas de optimización, como las utilizadas por las compilaciones de producción de la CLI, pueden realizar `tree shaking` y eliminar servicios que no son utilizados por su aplicación.
+
+- Esto no es ideal cuando dos componentes diferentes necesitan instancias diferentes de un servicio. En este escenario sería mejor proporcionar el servicio en el nivel del componente que necesita la instancia nueva y separada.
+
+### Utilice el decorador @Injectable()
+
+Utilice el decorador de clases @Injectable() en lugar del decorador de parámetros @Inject cuando utilice tipos como tokens para las dependencias de un servicio.
+
+Razones:
+
+- El mecanismo de Inyección de Dependencia Angular (DI) resuelve las dependencias propias de un servicio basándose en los tipos declarados de los parámetros del constructor de ese servicio.
+
+- Cuando un servicio acepta sólo dependencias asociadas con tokens de tipo, la sintaxis @Injectable() es mucho menos verbosa en comparación con el uso de @Inject() en cada parámetro de constructor individual.
+
+## Servicios Externos de datos
+
+### Hable con el servidor a través de un servicio
+
+Se recomienda reaizar la lógica de refactorización para realizar operaciones de datos e interactuar con los datos de un servicio.
+
+Haga que los servicios de datos sean responsables de las llamadas XHR, el almacenamiento local, el almacenamiento en memoria o cualquier otra operación de datos.
+
+Razones:
+
+- La responsabilidad del componente es la presentación y recopilación de información para la vista. No debería importarle cómo obtiene los datos, sólo **saber a quién pedirlos**. La separación de los servicios de datos mueve la lógica sobre cómo llevarlos al servicio de datos, y **permite que el componente sea más simple y más centrado en la vista**.
+
+- Esto facilita la prueba (simulada o real) de las llamadas de datos al probar un componente que utiliza un servicio de datos.
+
+- Los detalles de la gestión de datos, como las cabeceras, los métodos HTTP, el almacenamiento en caché, la gestión de errores y la lógica de reintento, son irrelevantes para los componentes y otros consumidores de datos.
+
+Un servicio de datos encapsula estos detalles. Es más fácil evolucionar estos detalles dentro del servicio sin afectar a sus consumidores. Y es más fácil probar a los consumidores con implementaciones de servicio simuladas.
+
+## Componentes
+
+## Ciclo de vida
+
+Utilice hooks de ciclo de vida para aprovechar los eventos importantes expuestos por Angular.
+
+### Implementar hooks de ciclo de vida
+
+Se recomienda implementar las interfaces de los hooks del ciclo de vida.
+
+Razones:
+
+- Las interfaces del ciclo de vida prescriben firmas de métodos mecanografiadas. Utilice esas firmas para marcar los errores ortográficos y de sintaxis.
+
+
+
+[oauth-flow-front]: ./oauth-flow-front-1.png
+[oauth-flow]: ./oauth-flow-1.png
