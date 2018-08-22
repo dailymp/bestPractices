@@ -1,0 +1,133 @@
+# Buenas prácticas RxJS 6
+
+<!-- TOC -->
+
+- [Buenas prácticas RxJS 6](#buenas-prácticas-rxjs-6)
+    - [Reactividad](#reactividad)
+    - [Pipe Operator](#pipe-operator)
+    - [Diagramas ASCII](#diagramas-ascii)
+    - [Uso de funciones puras](#uso-de-funciones-puras)
+    - [Evitar las fugas de memoria (memory leaks)](#evitar-las-fugas-de-memoria-memory-leaks)
+    - [Evitar suscripciones anidadas](#evitar-suscripciones-anidadas)
+    - [Evitar suscripciones manuales en Angular](#evitar-suscripciones-manuales-en-angular)
+    - [No transferir secuencias a los componentes directamente](#no-transferir-secuencias-a-los-componentes-directamente)
+    - [No transferir secuencias a los servicios](#no-transferir-secuencias-a-los-servicios)
+    - [Compartir suscripciones](#compartir-suscripciones)
+    - [Cuándo usar Subjects](#cuándo-usar-subjects)
+    - [Prácticas de código limpio](#prácticas-de-código-limpio)
+    - [NG y RxJS](#ng-y-rxjs)
+
+<!-- /TOC -->
+
+
+## Reactividad
+
+La programación reactiva es completamente diferente de la programación imperativa. Requiere que cambiemos de mentalidad. Este cambio de mentalidad es bastante importante si queremos beneficiarnos completamente de RxJS. debemos de dejar de pensar en acciones concretas y debemos empezar a pensar en streams.
+
+## Pipe Operator
+
+Es buena práctica es el uso de los `pipe operators`. Desde la versión 5.5 RxJS ha introducido los llamados operadores tubulares, que son más fáciles de importar que los anteriores `path operators`, y también tienen ventajas a la hora de ejecutar el `treeshaking`.
+
+## Diagramas ASCII
+
+Los diagramas ASCII, para RxJS, nos dan más ventajas que sólo documentar: 
+
+* Nos da un modelos gráfico del pensamiento. Esto puede parecer irrelevante, pero a la hora de trabajar con RxJS es muy beneficioso tanto para dejar dejar constancia de lo que hace el código, como de lo que queremos hacer (en fase de construcción) y para desarrolladores poco expertos con esta tecnología, les ayuda a una rápida comprensión de lo que se pretende. 
+
+* Se vuelve un códifo fácil de revisar y validar para ver si realmente hace lo que se supone que debe hacer.
+
+* Lo ideal para empezar sería dibujar en un papel, pizarra u otro soporte, antes de empezar a codificar. Es importante, como se dice, para saber a dónde quermos llegar y así podemos trazar la mejor forma de conseguirlo.
+
+* Puede escribirlos en su IDE  antes de empezar a codificar.
+
+* También podemos usarlos para escribir [pruebas unitarias](http://blog.kwintenp.com/how-to-setup-marble-testing/)
+
+## Uso de funciones puras
+
+RxJS sigue los conceptos de programación reactiva funcional, lo que básicamente significa que usaremos funciones puras para crear nuestro flujo reactivo. Una función es pura cuando:
+
+* No cambia nada
+* Siempre devolverá el mismo valor basado en los mismos parámetros
+* No tiene efectos secundarios. No puede mutar el estado fuera de la función
+* Al principio puede parecer pragmático usar efectos secundarios, pero eso significa que no estamos pensando completamente de manera reactiva. Por lo tanto, evite los efectos secundarios en la medida de lo posible.
+
+## Evitar las fugas de memoria (memory leaks)
+
+Para consumir un stream necesitamos suscribirnos a ese stream. Cuando nos suscribimos a ese flujo se creará una suscripción. Esa suscripción seguirá vigente hasta que se complete el flujo o hasta que nos demos de baja manualmente de ese flujo. La gestión de las suscripciones es muy importante y en algunos casos tendremos que anular manualmente una suscripción existente para evitar fugas de memoria.
+Para eliminar las fugas de memoria en un componente podemos hacer un seguimiento de las suscripciones aprovechando el hook del ciclo de vida de Angular; nos referimos al método ngOnDestroy().
+
+Sin embargo, cuando usamos un montón de suscripciones, puede ensuciarse bastante. Antes, comentaba sobre el hecho de que una suscripción vivirá hasta que nos demos de baja manualmente, pero también hasta que el stream se complete. Una buena manera de manejar este asunto es usar un tema que veremos a continuación en el ciclo de vida ngOnDestroy() de Angular.
+
+## Evitar suscripciones anidadas
+
+El anidamiento de suscripciones es algo que debe evitarse en la medida de lo posible. Hace que el código sea ilegible, complejo e introduce efectos secundarios no deseados. Básicamente te obliga a NO pensar reactivamente.
+
+En caso de tener que anidar, se recomienda utilizar **flujos superior** como mergeMap o switchMap.
+
+## Evitar suscripciones manuales en Angular
+
+Para consumir un stream necesitamos suscribir ese stream, así es como funcionan los observables. Pero, si un componente necesita valores de 5 streams diferentes, necesitaremos suscribirnos a todos estos streams y asignar manualmente todos los valores a propiedades únicas. Esto no es mantenible ni óptimo.
+
+Angular tiene una característica llamada `async pipe`. Se utiliza para consumir streams directamente en la plantilla El `async pipe` hace 3 cosas por nosotros:
+
+* Se suscribe al stream y pasa el valor a un componente
+* Se cancela automáticamente cuando el componente se destruye (elimina una gran cantidad de lógica de cancelación de suscripciones).
+* Desencadena automáticamente la detección de cambios
+* Esto significa que ya no tenemos que suscribirnos ni desuscribirnos manualmente. Lo que limpia mucho el código.
+
+## No transferir secuencias a los componentes directamente
+
+Uno de los aspectos más importantes en la arquitectura de software es el concepto de desacoplar piezas de código. Por lo tanto, podemos considerar la transmisión de secuencias a los componentes hijo como una mala práctica, ya que crea un vínculo muy estrecho entre el componente padre y el componente hijo. Ya no están desacoplados, ya que las suscripciones en el componente hijo pueden desencadenar acciones en el componente padre. Nunca queremos que el componente hijo sea responsable de iniciar las llamadas de datos. Esa es la tarea del _componente inteligente_. Un componente siempre debe recibir un objeto o valor y ni siquiera debe importarle si ese objeto o valor proviene de un flujo o no. 
+
+Como recomendación, sería mejor manejar la suscripción en el propio componente padre. La responsabilidad del componente es clara. El componente está pensado para ser "mudo" y está completamente desacoplado del padre.
+
+Sin embargo, hay situaciones en las que nos es necesario crear un flujo a partir de una entrada. En ese caso podríamos echar un vistazo a la librería `ngx-reactivetoolkit`
+
+## No transferir secuencias a los servicios
+
+Aunque podría parecer una solución pragmática pasar los streams directamente a los servicios, podría considerarse una mala práctica si consideramos de nuevo el desacoplamiento. Al pasar un flujo a un servicio no sabemos qué va a pasar con él. El stream podría ser suscrito, o incluso combinado con otro stream que tenga un ciclo de vida más largo, que podría eventualmente determinar el estado de nuestra aplicación. Las suscripciones pueden desencadenar comportamientos no deseados. Y después de todo, a los servicios no les importa que sus componentes estén usando streams.
+
+Sería mejor utilizar un _flujo superior_  para estas situaciones, ya que cancelará la suscripción al flujo anterior.
+
+## Compartir suscripciones
+
+Dado que la mayoría de las streams están pausados de forma predeterminada, cada suscripción activará el "disparador" de estos streams. La ejecución de la lógica del "disparador" en cada suscripción, puede no ser lo que queremos si tenemos múltiples suscripciones. Un  ejemplo podría ser al suscribirse a Angular su http.get() varias veces se realizarán múltiples llamadas xhr.
+
+En este caso es posible que queramos compartir las suscripciones. Para ello se recomienda el uso del operador `share()`. Pero todo tiene su contra, es un error común compartirlo todo, ya que tiene su coste en rendimiento.
+
+Angular también proporciona una gran alternativa que puede reducir al mínimo la compartición de secuencias mediante el uso de la sintaxis de asíncronos.
+
+## Cuándo usar Subjects
+
+Un Subjects es tanto un observador "caliente" como un observador al mismo tiempo. Esto nos da la oportunidad de introducir nosotros mismos los valores en la corriente. Utilícelos sólo cuando sea realmente necesario, por ejemplo, está bien utilizarlos en los siguientes escenarios:
+
+* Mockear streams en tests
+* Cuando queremos crear streams a partir de datos de salida en Angular
+* Al manipular referencias circulares
+
+## Prácticas de código limpio
+
+La indentación y formateo consistente del código puede mejorar la legibilidad de streams complejos:
+
+* Alinear los operadores uno debajo del otro:
+```javascript
+    example$.pipe(
+        map(....)
+        filter(....)
+        tap(...)
+    )
+```
+* Extracción en diferentes streams cuando se vuelve ilegible
+* Poner una funcionalidad más compleja en los métodos privados
+
+## NG y RxJS
+
+Se recomienda utilizar la funcionalidad que proporciona Angular, ya que se apoya fuertemente en la librería RxJS. 
+
+Ejemplos:
+
+* La `Activatedroute` expone un stream de parámetros.
+* El módulo `Http` y el `HttpClient`, ambos tienen streams de retorno
+* Tanto el módulo `Form` como el `FormControl` tienen la propiedad `valueChanges` que devuelve un stream:
+* El `async pipe` es una característica que realmente nos ayuda a utilizar los streams en nuestras plantillas
+* Usar la función de ciclo de vida `ngOnInit()` para inicializar los streams puede ayudarnos para usar _datos de prueba_
